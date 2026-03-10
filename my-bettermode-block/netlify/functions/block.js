@@ -1,11 +1,11 @@
 exports.handler = async (event) => {
     // 1. CORS и JSON Хедъри - ЗАДЪЛЖИТЕЛНИ за Bettermode
     const headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Content-Type": "application/json"
-    };
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Content-Type": "application/json"
+};
 
     // Обработка на OPTIONS заявка (Preflight)
     if (event.httpMethod === "OPTIONS") {
