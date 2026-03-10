@@ -1,21 +1,30 @@
 exports.handler = async (event) => {
+    // Важно: CORS хедъри, за да може Bettermode да достъпи функцията
     const headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Content-Type": "application/json"
+        "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+        "Content-Type": "application/json" // Трябва да е JSON!
     };
 
-    if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 200, headers, body: "" };
+    }
 
     try {
         const body = JSON.parse(event.body || "{}");
         const interactionId = body?.data?.interactionId;
 
+        // Ако няма interactionId, значи е тестов пинг от Bettermode или браузъра
         if (!interactionId) {
-            return { statusCode: 200, headers, body: JSON.stringify({ message: "Ready" }) };
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ status: "online" })
+            };
         }
 
+        // ВРЪЩАМЕ ЧИСТ ОБЕКТ (без stringify вътре в blocks)
         const response = {
             type: "INTERACTION",
             status: "SUCCEEDED",
@@ -36,35 +45,23 @@ exports.handler = async (event) => {
                                         padding: "md",
                                         gap: "md"
                                     },
-                                    children: ["header", "card1"]
+                                    children: ["header", "text-body"]
                                 },
                                 {
                                     id: "header",
                                     name: "Text",
                                     props: {
                                         size: "lg",
-                                        value: "Recommended for You",
+                                        value: "🚀 Успешна връзка!",
                                         weight: "bold"
                                     },
                                     children: []
                                 },
                                 {
-                                    id: "card1",
-                                    name: "Card",
-                                    props: {},
-                                    children: ["content1"]
-                                },
-                                {
-                                    id: "content1",
-                                    name: "Card.Content",
-                                    props: {},
-                                    children: ["title1"]
-                                },
-                                {
-                                    id: "title1",
+                                    id: "text-body",
                                     name: "Text",
                                     props: {
-                                        value: "Ако виждаш това, работи!",
+                                        value: "Това съдържание идва директно от твоята Netlify функция.",
                                         size: "md"
                                     },
                                     children: []
@@ -81,7 +78,12 @@ exports.handler = async (event) => {
             headers,
             body: JSON.stringify(response)
         };
+
     } catch (err) {
-        return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: "Invalid Request", details: err.message })
+        };
     }
 };
