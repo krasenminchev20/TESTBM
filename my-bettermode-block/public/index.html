@@ -1,5 +1,106 @@
 <!DOCTYPE html>
-<html>
-<head><title>Block API</title></head>
-<body><h1>API is running at /api/block</h1></body>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bettermode Block Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f9fafb; }
+        .iframe-container { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; }
+        .iframe-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-2xl mx-auto">
+        <header class="mb-8 border-b pb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Preview на твоя Dynamic Block</h1>
+            <p class="text-gray-500">Това симулира как ще изглежда блокът в Bettermode</p>
+        </header>
+
+        <div id="block-container" class="bg-white p-6 rounded-xl shadow-lg min-h-[200px] flex items-center justify-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+
+        <footer class="mt-8 text-center text-sm text-gray-400">
+            API Endpoint: <span class="font-mono">/api/block</span>
+        </footer>
+    </div>
+
+    <script>
+        async function loadPreview() {
+            try {
+                // Викаме твоята Netlify функция
+                const response = await fetch('/api/block', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: { interactionId: "local-preview" } })
+                });
+
+                const result = await response.json();
+                
+                // Вземаме списъка с блокове
+                const blocks = result.data.interactions[0].slate.blocks;
+                const container = document.getElementById('block-container');
+                container.innerHTML = ''; // Чистим лоудъра
+                container.className = "space-y-4 p-4"; // Прилагаме стиловете на root контейнера
+
+                // Проста логика за рендериране на блоковете в HTML
+                blocks.forEach(block => {
+                    const props = typeof block.props === 'string' ? JSON.parse(block.props) : block.props;
+                    let el;
+
+                    if (block.name === "Text") {
+                        el = document.createElement('div');
+                        el.className = props.className || "";
+                        if (props.size === "lg") el.classList.add("text-xl", "font-bold");
+                        if (props.size === "md") el.classList.add("text-base");
+                        if (props.size === "xs") el.classList.add("text-xs", "text-blue-600", "uppercase");
+                        el.innerText = props.value;
+                    } 
+                    
+                    else if (block.name === "Card") {
+                        el = document.createElement('div');
+                        el.className = "bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden mb-4 p-4";
+                        el.id = block.id;
+                    } 
+                    
+                    else if (block.name === "Card.Content") {
+                        // Тъй като това е дете на Card, намираме родителя
+                        el = document.createElement('div');
+                        el.className = "flex flex-col gap-3";
+                        el.id = block.id;
+                    }
+
+                    else if (block.name === "Iframe") {
+                        el = document.createElement('div');
+                        el.className = "iframe-container mt-2";
+                        el.innerHTML = `<iframe src="${props.src}" title="${props.title}" frameborder="0" allowfullscreen></iframe>`;
+                    }
+
+                    // Закачаме елементите (проста версия на децата)
+                    if (el) {
+                        if (block.id.includes("content")) {
+                            const card = document.querySelector('[id^="card"]');
+                            if (card) card.appendChild(el);
+                        } else if (block.id.includes("title") || block.id.includes("meta") || block.id.includes("desc") || block.id.includes("iframe")) {
+                            const content = document.querySelector('[id^="content"]');
+                            if (content) content.appendChild(el);
+                        } else {
+                            container.appendChild(el);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                document.getElementById('block-container').innerHTML = 
+                    `<div class="text-red-500 font-bold">Грешка при зареждане: ${error.message}</div>`;
+            }
+        }
+
+        // Стартираме симулацията
+        loadPreview();
+    </script>
+</body>
 </html>
