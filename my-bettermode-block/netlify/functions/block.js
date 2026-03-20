@@ -119,13 +119,13 @@ exports.handler = async (event) => {
                                     id: "iframe1",
                                     name: "Iframe",
                                     props: {
-                                        src: "https://www.youtube.com/embed/H98Rfljxmsc",
-                                        height: 400,
-                                        title: "YouTube Video",
+                                        src: "https://krasen-s-community-pc0fubhh.bettermode.io/",
+                                        height: 600,
+                                        title: "Community",
                                         hidden: false
                                     },
                                     children: []
-                                },
+}                               ,
 
                                 {
                                     id: "card2",
